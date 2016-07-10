@@ -9,11 +9,8 @@
 // Init the DS3231 using the hardware interface
 DS3231  rtc(SDA, SCL);
 
-int red = 11; //this sets the red led pin
-int green = 10; //this sets the green led pin
-int blue = 9; //this sets the blue led pin
 
-int powerPinLed = 6;//pin for turning led on or off
+
 int relayPin = 8; 
 
 int buttonPin = 2; 
@@ -31,15 +28,13 @@ void setup()
   
   pinMode(buttonPin, INPUT);
   
-  //setting up rgb led
-  pinMode(red, OUTPUT);
-  pinMode(green, OUTPUT);
-  pinMode(blue, OUTPUT);
+
+  
   //setting up relay 
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, LOW);
   
-  pinMode(powerPinLed, INPUT);
+  
   //digitalWrite(powerPinLed, LOW);//no sure if needed ?
   // Initialize the rtc object
   rtc.begin();
@@ -48,13 +43,20 @@ void setup()
 void loop()
 {
   int buttonState = digitalRead(buttonPin);
-  int ledPowerState =  digitalRead(powerPinLed);
   
   String currentTime = rtc.getTimeStr();
   String hourChar = currentTime.substring(0,2);
+  String minuteChar = currentTime.substring(3,5);
+  int minutes = minuteChar.toInt();
   int hour = hourChar.toInt();
-
-  Serial.println(rtc.getTemp());
+  //every 30 min send temp info to computer via serial
+  
+  if(minutes == 30)
+  {
+     Serial.print(rtc.getTemp());
+     delay(1000);
+  }
+  //Serial.println(rtc.getTemp());
   if(hour > 4 && hour < turnOnHour)
   {
     buttonPressed = 0;
@@ -64,32 +66,17 @@ void loop()
   {
     buttonPressed = 1;
     digitalWrite(relayPin, LOW);
-    turnOff();
   }
    
   
-  if(hour >= turnOnHour && ledPowerState == LOW && isItmorning == 0 && buttonPressed == 0)
+  if(hour >= turnOnHour && isItmorning == 0 && buttonPressed == 0)
   {
     digitalWrite(relayPin, HIGH);
-    setWhite();
   }
   
-  // Wait 30 min before repeating
-  delay (1800000);
+  // Wait 1 second before repeating
+  //delay (1800000);
+  delay(4000);
 }
-// turns led on and show an white color 
-void setWhite()
-{
-  //digitalWrite(powerPinLed, HIGH);
-  digitalWrite(red, LOW);
-  digitalWrite(green, LOW);
-  digitalWrite(blue, LOW);
 
-}
-void turnOff()
-{
-  analogWrite(red, 255);
-  analogWrite(green, 255);
-  analogWrite(blue,255);
-}
 
